@@ -4,10 +4,16 @@ module Api
     REQUEST_PARAMS = %w[store_id category_id channel].freeze
 
     def show
-      request = Reports::MonthlyComparisonRequest.new(request_parameters)
-      result = Reports::MonthlyComparison.new(request: request).call
+      inquiry = Reports::MonthlyComparisonRequest.new(request_parameters)
 
-      render json: Reports::MonthlyComparisonSerializer.new(result).as_json
+      if inquiry.valid?
+        result = Reports::MonthlyComparison.new(request: inquiry).call
+        render json: Reports::MonthlyComparisonSerializer.new(result).as_json
+
+      else
+        error = inquiry.errors.full_messages.to_sentence
+        render json: { error: { code: 'bad_request', message: error } }, status: :bad_request
+      end
     end
 
     private
