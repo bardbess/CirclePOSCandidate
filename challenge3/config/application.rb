@@ -5,12 +5,9 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module NewProject
+module CircleposChallenge3
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
-    config.active_record.schema_format = :ruby
-
     config.api_only = true
     config.time_zone = "UTC"
 
