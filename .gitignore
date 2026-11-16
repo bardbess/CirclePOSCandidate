@@ -1,8 +1,9 @@
 database.yml
 .bundle
-/log/*
-/tmp/*
-/tmp/pids/*
-/public/assets
+/*/log/*
+/*/tmp/*
+/*/tmp/pids/*
+/*/public/assets
+/*/storage/*.sqlite3
 .env
 .DS_Store
