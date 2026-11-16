@@ -5,4 +5,7 @@ class Store < ApplicationRecord
 
   validates :id, :name, :reporting_through, presence: true
 
+  def latest_month
+    reporting_through&.beginning_of_month
+  end
 end
