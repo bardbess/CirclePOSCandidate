@@ -1,0 +1,21 @@
+{
+  "stores": [
+    {
+      "id": "demo-auckland",
+      "name": "Demo Auckland",
+      "reporting_through": "2025-12"
+    }
+  ],
+  "monthly_sales": [
+    {
+      "store_id": "demo-auckland",
+      "month": "2024-01",
+      "category_id": "fiction",
+      "channel": "web",
+      "sales_ex_tax": 10125,
+      "gross_profit_ex_tax": 2835.0,
+      "orders": 102,
+      "returns": 3
+    }
+  ]
+}
