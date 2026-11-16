@@ -2,21 +2,23 @@ require "bigdecimal"
 
 module Reports
   class AnnualTotal
-    attr_reader :monthly_results
+    attr_reader :monthly_results, :first_month
 
-    def initialize(query)
+    def initialize(query, first_month: )
       @current_total = decimal(0)
       @previous_total = decimal(0)
+
+      current_start = first_month + 12.months
 
       @monthly_results = 12.times.map do |offset|
         current_month = current_start + offset.months
         previous_month = current_month - 12.months
 
-        current = totals_by_month.fetch(current_month, zero_totals)
-        previous = totals_by_month.fetch(previous_month, zero_totals)
+        current = query.fetch(current_month, zero_totals)
+        previous = query.fetch(previous_month, zero_totals)
 
-        @current_total += current.fetch(:sales)
-        @previous_total += previous.fetch(:sales)
+        @current_total += current[:sales]
+        @previous_total += previous[:sales]
 
         month_result(current_month, current, previous)
       end
@@ -30,14 +32,24 @@ module Reports
       money(@previous_total)
     end
 
-    # A percentage change is undefined when the comparison-period value is zero.
-    def percentage_delta
-      return nil if @previous_total.zero?
-
-     money(((@current_total - @previous_total) / @previous_total) * 100)
+    def percentage_delta_total
+      percentage_delta(@current_total, @previous_total)
     end
 
+
+    def zero_totals
+      { sales: decimal(0), gross_profit: decimal(0), orders: 0, returns: 0 }
+    end
+
+
     private
+
+    # A percentage change is undefined when the comparison-period value is zero.
+    def percentage_delta(current_val, previous_val)
+      return nil if current_val.zero?
+
+     money(((current_val - previous_val) / previous_val) * 100)
+    end
 
     def money(value)
       value.round(2).to_f
@@ -49,17 +61,17 @@ module Reports
 
     def month_result(month, current, previous)
       {
-        "month" => month.strftime("%Y-%m"),
-        "current_year_sales_ex_tax" => money(current.fetch(:sales)),
-        "current_year_gross_profit_ex_tax" => money(current.fetch(:gross_profit)),
-        "previous_year_sales_ex_tax" => money(previous.fetch(:sales)),
-        "previous_year_gross_profit_ex_tax" => money(previous.fetch(:gross_profit)),
-        "delta_sales_amount" => money(current.fetch(:sales) - previous.fetch(:sales)),
-        "delta_sales_pct" => percentage_delta(current.fetch(:sales), previous.fetch(:sales)),
-        "delta_gross_profit_amount" => money(current.fetch(:gross_profit) - previous.fetch(:gross_profit)),
-        "delta_gross_profit_pct" => percentage_delta(current.fetch(:gross_profit), previous.fetch(:gross_profit)),
-        "orders" => current.fetch(:orders),
-        "returns" => current.fetch(:returns)
+        month: month.strftime("%Y-%m"),
+        current_year_sales_ex_tax: money(current[:sales]),
+        current_year_gross_profit_ex_tax: money(current[:gross_profit]),
+        previous_year_sales_ex_tax: money(previous[:sales]),
+        previous_year_gross_profit_ex_tax: money(previous[:gross_profit]),
+        delta_sales_amount: money(current[:sales] - previous[:sales]),
+        delta_sales_pct: percentage_delta(current[:sales], previous[:sales]),
+        delta_gross_profit_amount: money(current[:gross_profit] - previous[:gross_profit]),
+        delta_gross_profit_pct: percentage_delta(current[:gross_profit], previous[:gross_profit]),
+        orders: current[:orders],
+        returns: current[:returns]
       }
     end
   end

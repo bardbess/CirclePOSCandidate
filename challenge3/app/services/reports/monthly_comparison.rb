@@ -9,19 +9,20 @@ module Reports
     # Expects a Report::MonthlyComparisonRequest instance
     def initialize(request:)
       @request = request
-      @store = Store.find(id: @request.store_id)
+      @store = Store.find(@request.store_id)
     end
 
     def store_monthly_sales
       query = store.monthly_sales
       query = query.where(month: first_month..latest_month)
       query = query.where(category_id: request.category_id) if request.category_id
-      query.where(channel: request.channel) if request.channel
+      query = query.where(channel: request.channel) if request.channel
+      query
     end
 
     def call
       totals_by_month = aggregate_by_month(store_monthly_sales)
-      sales = Reports::AnnualTotal.new(totals_by_month)
+      sales = Reports::AnnualTotal.new(totals_by_month, first_month: first_month)
 
       {
         store: store,
@@ -33,9 +34,9 @@ module Reports
         summary: {
           current_year_sales_ex_tax: sales.current_total,
           previous_year_sales_ex_tax: sales.previous_total,
-          delta_sales_pct: sales.percentage_delta
+          delta_sales_pct: sales.percentage_delta_total
         },
-        months: months
+        months: sales.monthly_results
       }
     end
 
@@ -47,10 +48,6 @@ module Reports
 
     def first_month
       @first_month ||= latest_month - (@request.months - 1).months
-    end
-
-    def current_start
-      first_month + 12.months
     end
 
     def aggregate_by_month(query)
@@ -72,9 +69,6 @@ module Reports
       end
     end
 
-    def zero_totals
-      { sales: decimal(0), gross_profit: decimal(0), orders: 0, returns: 0 }
-    end
 
     def decimal(value)
       BigDecimal(value.to_s)
