@@ -1,0 +1,8 @@
+database.yml
+.bundle
+/log/*
+/tmp/*
+/tmp/pids/*
+/public/assets
+.env
+.DS_Store
